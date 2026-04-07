@@ -13,5 +13,4 @@ npm run dev
 
 ## Related
 
-* API: [https://github.com/YOUR-ORG/vyora-api
-](https://github.com/WitReach/vyora-api)
+* API: https://github.com/WitReach/vyora-api
