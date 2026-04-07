@@ -1,2 +1,17 @@
-# vyora-frontend
-Vyora Frontend — High-performance headless commerce storefront built with Next.js. Part of the WitReach ecosystem.
+# Vyora Frontend
+
+Frontend for Vyora — an open-source headless commerce platform.
+
+Built with Next.js.
+
+## Setup
+
+```bash
+npm install
+npm run dev
+```
+
+## Related
+
+* API: [https://github.com/YOUR-ORG/vyora-api
+](https://github.com/WitReach/vyora-api)
