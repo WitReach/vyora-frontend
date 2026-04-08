@@ -84,4 +84,4 @@ We welcome contributions! If you'd like to help improve Vyora, please:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-Built with ❤️ by [WitReach](https://github.com/WitReach)
+Built with ❤️ by [Wit Reach](https://witreach.com) and [Dope Style](https://dopestyle.in)
