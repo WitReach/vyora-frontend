@@ -1,18 +1,20 @@
-import PageRenderer from "../components/PageRenderer";
+import PageRenderer from "../../components/PageRenderer";
+import { notFound } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getData() {
+async function getData(slug: string) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
   try {
     const [pageRes, settingsRes] = await Promise.all([
-      fetch(`${apiUrl}/home-page`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/pages/${slug}`, { cache: 'no-store' }),
       fetch(`${apiUrl}/settings`, { cache: 'no-store' })
     ]);
 
     if (!pageRes.ok) {
-      console.error("Failed to fetch home page", pageRes.status, pageRes.statusText);
+      if (pageRes.status === 404) return { page: null, settings: {} };
+      console.error("Failed to fetch CMS page", pageRes.status, pageRes.statusText);
       return { page: null, settings: {} };
     }
 
@@ -21,21 +23,17 @@ async function getData() {
 
     return { page, settings };
   } catch (error) {
-    console.error("Error fetching home data", error);
+    console.error("Error fetching CMS data", error);
     return { page: null, settings: {} };
   }
 }
 
-export default async function Home() {
-  const { page, settings } = await getData();
+export default async function CMSPage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
+  const { page, settings } = await getData(slug);
 
   if (!page || !page.content) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-24">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Our Store</h1>
-        <p className="text-xl text-gray-600">We are setting things up. Please check back later!</p>
-      </div>
-    );
+    notFound();
   }
 
   return (
