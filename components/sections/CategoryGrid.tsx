@@ -1,7 +1,8 @@
 import Link from 'next/link';
 
 export default function CategoryGrid({ data, isFluid, sectionBg }: { data: any; isFluid?: boolean; sectionBg?: string }) {
-    if (!data?.items || data.items.length === 0) return null;
+    const items = data?.categories || data?.items || [];
+    if (items.length === 0) return null;
 
     const containerClass = isFluid ? 'w-full px-4 md:px-8' : 'max-w-7xl mx-auto px-4 md:px-8';
     const colMap: any = { '2': 'grid-cols-2', '3': 'grid-cols-2 md:grid-cols-3', '4': 'grid-cols-2 md:grid-cols-4' };
@@ -14,7 +15,7 @@ export default function CategoryGrid({ data, isFluid, sectionBg }: { data: any; 
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mb-8 md:mb-12">{data.title}</h2>
                 )}
                 <div className={`grid gap-4 md:gap-6 ${colClass}`}>
-                    {data.items.map((item: any, idx: number) => (
+                    {items.map((item: any, idx: number) => (
                         <Link
                             key={idx}
                             href={item.link || '#'}

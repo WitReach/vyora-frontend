@@ -158,8 +158,17 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
                 {/* Desktop Masonry Grid (Hidden on Mobile) */}
                 <div className="hidden md:grid grid-cols-2 gap-1 sm:gap-2">
                     {displayedImages.map((img, idx) => (
-                        <div key={img.id || idx} className={cn("relative bg-gray-50 overflow-hidden", idx === 0 && !selectedColor ? "col-span-2 aspect-[4/5] object-top" : "col-span-1 aspect-[3/4]")}>
-                            <Image src={img.url} alt={`${product.name} view ${idx+1}`} fill className="object-cover object-center" priority={idx < 2} />
+                        <div key={img.id || idx} className={cn(
+                            "relative bg-gray-50 overflow-hidden", 
+                            idx === 0 && !selectedColor ? "col-span-2 md:h-[calc(100vh-4rem)]" : "col-span-1 aspect-[3/4]"
+                        )}>
+                            <Image 
+                                src={img.url} 
+                                alt={`${product.name} view ${idx+1}`} 
+                                fill 
+                                className={cn(idx === 0 && !selectedColor ? "object-contain" : "object-cover", "object-center")} 
+                                priority={idx < 2} 
+                            />
                         </div>
                     ))}
                 </div>

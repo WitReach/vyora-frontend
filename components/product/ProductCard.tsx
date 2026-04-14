@@ -14,8 +14,12 @@ export function ProductCard({ product }: { product: ProductList }) {
     const bgColor = settings?.pc_bg_color || '#ffffff';
     const borderRadius = settings?.pc_border_radius || 'rounded'; // 'square', 'rounded', 'pill'
     const shadowInt = settings?.pc_shadow || 'soft'; // 'none', 'soft', 'strong'
-    const btnLayout = settings?.pc_btn_layout || 'both'; // 'text_only', 'icon_only', 'both'
-    const showWishlist = settings?.pc_show_wishlist !== 'false';
+    // Pull per-button styles from settings (new keys)
+    // Fallback gracefully for stores using old settings
+    const buyNowStyle  = settings?.pc_buynow_style  || (settings?.pc_btn_layout === 'icon_only' ? 'icon_only' : settings?.pc_btn_layout === 'both' ? 'text_icon' : 'text_only');
+    const cartStyle    = settings?.pc_cart_style    || 'hidden';
+    const wishlistStyle = settings?.pc_wishlist_style || (settings?.pc_show_wishlist === 'false' ? 'hidden' : 'icon_only');
+
     const imageAspect = settings?.pc_image_aspect || 'aspect-[4/5]';
 
     // Build classes based on config
@@ -127,37 +131,51 @@ export function ProductCard({ product }: { product: ProductList }) {
                     <div className="flex-grow"></div>
 
                     {/* Call To Actions */}
-                    <div className="flex items-center gap-2 mt-3 pt-2">
-                        {btnLayout !== 'icon_only' && (
-                            <button className="flex-1 flex items-center justify-center gap-2 bg-black text-white text-xs font-bold uppercase tracking-wider py-2.5 rounded-lg hover:bg-gray-800 transition-colors shadow-sm focus:ring-2 focus:ring-offset-1 focus:ring-black">
-                                {btnLayout === 'both' && (
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    {(buyNowStyle !== 'hidden' || cartStyle !== 'hidden' || wishlistStyle !== 'hidden') && (
+                        <div className="flex items-center gap-2 mt-3 pt-2">
+
+                            {/* Buy Now */}
+                            {buyNowStyle !== 'hidden' && (
+                                <button className="flex-1 flex items-center justify-center gap-1.5 bg-black text-white text-xs font-bold uppercase tracking-wider py-2.5 rounded-lg hover:bg-gray-800 transition-colors shadow-sm focus:ring-2 focus:ring-offset-1 focus:ring-black">
+                                    {(buyNowStyle === 'icon_only' || buyNowStyle === 'text_icon') && (
+                                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                        </svg>
+                                    )}
+                                    {buyNowStyle !== 'icon_only' && <span>Buy Now</span>}
+                                </button>
+                            )}
+
+                            {/* Add to Cart */}
+                            {cartStyle !== 'hidden' && (
+                                <button className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 text-gray-800 text-xs font-bold uppercase tracking-wider py-2.5 rounded-lg hover:bg-gray-200 transition-colors focus:ring-2 focus:ring-offset-1 focus:ring-gray-400">
+                                    {(cartStyle === 'icon_only' || cartStyle === 'text_icon') && (
+                                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    )}
+                                    {cartStyle !== 'icon_only' && <span>Add to Cart</span>}
+                                </button>
+                            )}
+
+                            {/* Wishlist */}
+                            {wishlistStyle !== 'hidden' && (
+                                <button
+                                    className={`flex shrink-0 items-center justify-center gap-1.5 border border-gray-200 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all active:scale-95 ${wishlistStyle === 'icon_only' ? 'w-9 h-9' : 'flex-1 py-2.5 px-3'}`}
+                                    aria-label="Add to Wishlist"
+                                >
+                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
-                                )}
-                                Buy Now
-                            </button>
-                        )}
-                        {btnLayout === 'icon_only' && (
-                            <button className="flex-1 bg-black text-white flex items-center justify-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors shadow-sm">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                </svg>
-                            </button>
-                        )}
-                        {showWishlist && (
-                            <button 
-                                className="w-9 h-9 flex shrink-0 items-center justify-center border border-gray-200 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all active:scale-95"
-                                aria-label="Add to Wishlist"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                            </button>
-                        )}
-                    </div>
+                                    {wishlistStyle !== 'icon_only' && <span className="text-xs font-bold uppercase tracking-wider">Wishlist</span>}
+                                </button>
+                            )}
+
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
     );
 }
+

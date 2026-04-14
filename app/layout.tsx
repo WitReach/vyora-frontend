@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 import Installer from "@/components/Installer";
 import Navbar from "@/components/Navbar";
+import AuthModal from "@/components/auth/AuthModal";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 
 async function getSettings() {
@@ -78,6 +79,7 @@ export default async function RootLayout({
             <SettingsProvider settings={settings}>
               <Navbar settings={settings} />
               {children}
+              <AuthModal />
             </SettingsProvider>
           </>
         ) : <Installer />}

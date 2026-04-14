@@ -5,10 +5,12 @@ import { ShoppingBag, User, LogOut } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { useState, useEffect } from 'react';
+import { useUIStore } from '@/store/ui';
 
 export default function Navbar({ settings }: { settings?: any }) {
     const cart = useCartStore();
     const { user, logout } = useAuthStore();
+    const { openAuthModal } = useUIStore();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -18,7 +20,12 @@ export default function Navbar({ settings }: { settings?: any }) {
     if (!mounted) return <nav className="h-16 border-b" />;
 
     const storeName = settings?.store_name || "DOPE STYLE";
-    const logoRelPath = settings?.main_logo; // "storage/theme/logos/..."
+    const logoRelPath = settings?.main_logo;
+
+    const authAppearance = typeof settings?.auth_appearance === 'string' 
+        ? JSON.parse(settings.auth_appearance) 
+        : (settings?.auth_appearance || {});
+    const isModalMode = authAppearance.ux_mode === 'modal';
 
     return (
         <nav className="border-b bg-white sticky top-0 z-50">
@@ -50,9 +57,18 @@ export default function Navbar({ settings }: { settings?: any }) {
                             </button>
                         </div>
                     ) : (
-                        <Link href="/login" className="text-sm font-medium hover:text-gray-600 flex items-center gap-1">
-                            <User className="w-4 h-4" /> Sign In
-                        </Link>
+                        isModalMode ? (
+                            <button 
+                                onClick={() => openAuthModal('login')}
+                                className="text-sm font-medium hover:text-gray-600 flex items-center gap-1"
+                            >
+                                <User className="w-4 h-4" /> Sign In
+                            </button>
+                        ) : (
+                            <Link href="/login" className="text-sm font-medium hover:text-gray-600 flex items-center gap-1">
+                                <User className="w-4 h-4" /> Sign In
+                            </Link>
+                        )
                     )}
 
                     <Link href="/cart" className="relative text-gray-900 hover:text-gray-600">
