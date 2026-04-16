@@ -37,11 +37,21 @@ function CouponChip({ code, parentTextColor, parentSubtextColor }: { code: strin
 
 
 export default function ProductDetailClient({ product, policies = {}, coupons = [] }: { product: ProductDetail; policies?: Record<string, string>; coupons?: any[] }) {
-    // 1. Sanitize Master Image and Gallery URLs bridging NextJS domains identical to Product Carousel
-    const sanitizeUrl = (url: string | null | undefined) => {
+    // 1. Sanitize image URLs → always resolve to a local /storage/... path served by Next.js public/
+    //    Gallery images come back as bare relative paths (e.g. "storage/products/...")
+    //    Master images come back as full URLs (e.g. "http://127.0.0.1:8000/storage/...")
+    //    Either way, we strip the backend origin and normalise to an absolute path starting with "/"
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+    const sanitizeUrl = (url: string | null | undefined): string | null => {
         if (!url) return null;
-        let clean = url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}${url}`;
-        return clean.replace(process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000', '').replace('http://localhost:8000', '').replace('http://127.0.0.1:8000', '');
+        // Strip known backend origins first (handles full URLs)
+        let path = url
+            .replace(backendUrl, '')
+            .replace('http://localhost:8000', '')
+            .replace('http://127.0.0.1:8000', '');
+        // Ensure leading slash (bare relative paths like "storage/..." are missing it)
+        if (!path.startsWith('/')) path = `/${path}`;
+        return path;
     };
 
     const cleanMasterImage = sanitizeUrl(product.image);
