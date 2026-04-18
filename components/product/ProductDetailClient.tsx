@@ -88,14 +88,22 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
             const s = v.attributes.find(a => a.name === 'Size');
             if (s) all.add(s.value);
         });
+
+        const availableInChart = product.size_chart?.measurements?.rows?.map((r: any) => r.size_code.toUpperCase()) || null;
+
         // Simplistic order mapping: XS, S, M, L, XL, XXL
         const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'];
-        return Array.from(all).sort((a, b) => {
-            let iA = order.indexOf(a.toUpperCase());
-            let iB = order.indexOf(b.toUpperCase());
-            return (iA !== -1 ? iA : 99) - (iB !== -1 ? iB : 99);
-        });
-    }, [product.variants]);
+        return Array.from(all)
+            .filter(size => {
+                // If no size chart, show all sizes. If size chart exists, only show sizes in that chart.
+                return !availableInChart || availableInChart.includes(size.toUpperCase());
+            })
+            .sort((a, b) => {
+                let iA = order.indexOf(a.toUpperCase());
+                let iB = order.indexOf(b.toUpperCase());
+                return (iA !== -1 ? iA : 99) - (iB !== -1 ? iB : 99);
+            });
+    }, [product.variants, product.size_chart]);
 
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -125,15 +133,20 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
         return uniqueImages.find(img => img.color_id && img.color_id.toString() === colorObj.id?.toString()) || displayedImages[0] || null;
     }, [selectedColor, colors, uniqueImages, displayedImages]);
 
-    // Mock size chart rows (inches)
-    const sizeChartRows = [
-        { size: 'XS', bust: '38.0', waist: '39.5', length: '27.0', hips: '39.5', shoulder: '14.5' },
-        { size: 'S',  bust: '40.0', waist: '41.5', length: '27.5', hips: '41.5', shoulder: '15.0' },
-        { size: 'M',  bust: '42.0', waist: '43.5', length: '28.0', hips: '43.5', shoulder: '15.5' },
-        { size: 'L',  bust: '44.0', waist: '45.5', length: '28.5', hips: '45.5', shoulder: '16.0' },
-        { size: 'XL', bust: '46.0', waist: '47.5', length: '29.0', hips: '47.5', shoulder: '16.5' },
-        { size: 'XXL',bust: '48.0', waist: '49.5', length: '29.5', hips: '49.5', shoulder: '17.0' },
-    ];
+    const sizeChartRows = useMemo(() => {
+        const rows = product.size_chart?.measurements?.rows || [];
+        const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL', '5XL'];
+        
+        return [...rows].sort((a: any, b: any) => {
+            let iA = order.indexOf(a.size_code.toUpperCase());
+            let iB = order.indexOf(b.size_code.toUpperCase());
+            return (iA !== -1 ? iA : 99) - (iB !== -1 ? iB : 99);
+        });
+    }, [product.size_chart]);
+
+    const sizeChartHeaders = useMemo(() => {
+        return product.size_chart?.measurements?.headers || [];
+    }, [product.size_chart]);
 
     const currentVariant = useMemo(() => {
         if (!selectedColor || !selectedSize) return null;
@@ -598,29 +611,27 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
             <div className="flex-1 overflow-y-auto">
                 {sizeChartTab === 'chart' ? (
                     <div className="p-4">
-                        <p className="text-right text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wider">Garment Measurements (Inches)</p>
+                        <p className="text-right text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wider">Measurements table (Inches)</p>
                         <div className="overflow-x-auto rounded-xl border border-gray-100">
                             <table className="w-full text-sm text-center">
                                 <thead>
                                     <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
                                         <th className="py-3 px-3 text-left">Size</th>
-                                        <th className="py-3 px-3">Bust</th>
-                                        <th className="py-3 px-3">Waist</th>
-                                        <th className="py-3 px-3">Length</th>
-                                        <th className="py-3 px-3">Hips</th>
-                                        <th className="py-3 px-3">Shoulder</th>
+                                        {sizeChartHeaders.map((header: string) => (
+                                            <th key={header} className="py-3 px-3">{header}</th>
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {sizeChartRows.map(row => {
-                                        const isSelected = selectedSize === row.size;
-                                        const isAvailable = sizes.includes(row.size);
+                                    {sizeChartRows.length > 0 ? sizeChartRows.map((row: any) => {
+                                        const isSelected = selectedSize?.toUpperCase() === row.size_code?.toUpperCase();
+                                        const isAvailable = sizes.some(s => s.toUpperCase() === row.size_code?.toUpperCase());
                                         return (
                                             <tr
-                                                key={row.size}
-                                                onClick={() => isAvailable && setSelectedSize(row.size)}
+                                                key={row.size_code}
+                                                onClick={() => isAvailable && setSelectedSize(sizes.find(s => s.toUpperCase() === row.size_code.toUpperCase()) || row.size_code)}
                                                 className={cn(
-                                                    "transition-colors",
+                                                    "transition-colors text-xs sm:text-sm",
                                                     isSelected
                                                         ? "bg-black text-white cursor-pointer hover:bg-gray-900"
                                                         : isAvailable
@@ -628,54 +639,55 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
                                                             : "opacity-30 cursor-not-allowed"
                                                 )}
                                             >
-                                                <td className="py-3.5 px-3 font-bold text-left">
+                                                <td className="py-3.5 px-3 font-bold text-left whitespace-nowrap">
                                                     <span className={cn("flex items-center gap-2")}>
                                                         <span className={cn(
                                                             "w-4 h-4 rounded-full border-2 inline-block shrink-0",
                                                             isSelected ? "border-white bg-white" : "border-gray-300"
                                                         )} />
-                                                        {row.size}
+                                                        {row.size_name || row.size_code}
                                                     </span>
                                                 </td>
-                                                <td className="py-3.5 px-3">{row.bust}</td>
-                                                <td className="py-3.5 px-3">{row.waist}</td>
-                                                <td className="py-3.5 px-3">{row.length}</td>
-                                                <td className="py-3.5 px-3">{row.hips}</td>
-                                                <td className="py-3.5 px-3">{row.shoulder}</td>
+                                                {sizeChartHeaders.map((header: string) => (
+                                                    <td key={header} className="py-3.5 px-3">
+                                                        {row.measurements[header] || '-'}
+                                                    </td>
+                                                ))}
                                             </tr>
                                         );
-                                    })}
+                                    }) : (
+                                        <tr>
+                                            <td colSpan={sizeChartHeaders.length + 1} className="py-8 text-center text-gray-400 italic">No measurement data available.</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
-                        <p className="text-center text-xs text-gray-400 mt-3">* Garment Measurements in Inches</p>
+                        <p className="text-center text-xs text-gray-400 mt-3">* Measurements table in Inches</p>
 
-                        {/* Size Pills inside drawer */}
-                        <div className="mt-6">
-                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Select Size</p>
-                            <div className="flex flex-wrap gap-2">
-                                {sizes.map(size => {
-                                    const isAvail = product.variants.some(v =>
-                                        (!selectedColor || v.attributes.find(a => a.name==='Color')?.value === selectedColor) &&
-                                        v.attributes.find(a => a.name==='Size')?.value === size &&
-                                        v.stock > 0
-                                    );
-                                    return (
+                        {/* Color Selection inside drawer */}
+                        <div className="mt-10 border-t border-gray-100 pt-6">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Select Color</p>
+                            <div className="flex flex-wrap gap-4">
+                                {colors.map((color: any) => (
+                                    <div key={color.value} className="relative group">
                                         <button
-                                            key={size}
-                                            onClick={() => isAvail && setSelectedSize(size)}
-                                            disabled={!isAvail}
+                                            onClick={() => setSelectedColor(color.value)}
                                             className={cn(
-                                                "w-14 py-3 rounded-xl text-sm font-bold border transition-all",
-                                                selectedSize === size
-                                                    ? "bg-black text-white border-black"
-                                                    : isAvail
-                                                        ? "bg-white border-gray-200 text-gray-900 hover:border-black"
-                                                        : "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed"
+                                                "w-10 h-10 rounded-full border-2 transition-all p-0.5",
+                                                selectedColor === color.value ? "border-black scale-110 shadow-md" : "border-transparent hover:border-gray-200"
                                             )}
-                                        >{size}</button>
-                                    );
-                                })}
+                                        >
+                                            <div 
+                                                className="w-full h-full rounded-full shadow-inner border border-gray-100" 
+                                                style={{ backgroundColor: color.meta || '#ccc' }} 
+                                            />
+                                        </button>
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
+                                            {color.value}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

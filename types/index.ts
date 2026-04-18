@@ -22,6 +22,12 @@ export interface ProductDetail extends ProductList {
     images: { id: number; url: string; is_primary: boolean; color_id: number | null }[];
     variants: Variant[];
     seo: { title: string; description: string };
+    size_chart: {
+        id: number;
+        name: string;
+        description: string;
+        measurements: any[];
+    } | null;
 }
 
 export interface Variant {

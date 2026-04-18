@@ -134,6 +134,7 @@ export default function Navbar({ settings }: { settings?: any }) {
                                         )}
                                 <div className="absolute left-0 top-full mt-0 w-full bg-white border-b border-t shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top -translate-y-2 group-hover:translate-y-0 z-[100]">
                                     <div className="max-w-7xl mx-auto px-4 py-8">
+                                        {/* tailwind scanner safelist: grid-cols-2 grid-cols-3 grid-cols-4 grid-cols-5 grid-cols-6 */}
                                         <div className={`grid gap-8 grid-cols-${item.columns || 4} items-start`}>
                                             {item.layout_columns?.map((col: any) => (
                                                 <div key={col.id || Math.random()} className="flex flex-col gap-6">
