@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useId } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -10,6 +10,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 export default function ImageProductCarousel({ data, isFluid }: { data: any; isFluid?: boolean }) {
+    const sectionId = useId().replace(/:/g, '');
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -81,10 +82,25 @@ export default function ImageProductCarousel({ data, isFluid }: { data: any; isF
 
                 {/* Column 2: Product Carousel */}
                 <div className="w-full relative px-2">
+                    <div className="flex items-center justify-between mb-8">
+                        <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Feature Collection</h3>
+                        <div className="flex items-center gap-2">
+                            <button className={`prev-${sectionId} w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-black hover:text-white hover:border-black transition-all`}>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+                            <button className={`next-${sectionId} w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-black hover:text-white hover:border-black transition-all`}>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                    
                     {products.length > 0 ? (
                         <Swiper
                             modules={[Navigation, Pagination]}
-                            navigation
+                            navigation={{
+                                prevEl: `.prev-${sectionId}`,
+                                nextEl: `.next-${sectionId}`,
+                            }}
                             pagination={{ clickable: true }}
                             spaceBetween={30}
                             slidesPerView={1}

@@ -5,9 +5,33 @@ import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useWishlistStore } from "@/store/wishlist";
 
-export function ProductCard({ product }: { product: ProductList }) {
+export function ProductCard({ product, activeCategory }: { product: ProductList, activeCategory?: string }) {
     const settings = useSettings();
+    const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
+    const wishlisted = isInWishlist(product.id);
+
+    const handleWishlistToggle = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (wishlisted) {
+            removeFromWishlist(product.id);
+        } else {
+            addToWishlist({
+                productId: product.id,
+                name: product.name,
+                slug: product.slug,
+                price: product.price,
+                mrp: product.mrp,
+                discount_percentage: product.discount_percentage,
+                image: product.image,
+                video: product.video,
+                brand: product.brand,
+                category: product.category,
+            });
+        }
+    };
 
     // Pull configuration (or use sane defaults matching your brand)
     const cardStyle = settings?.pc_style || 'lift'; // 'outline', 'solid', 'lift'
@@ -50,30 +74,54 @@ export function ProductCard({ product }: { product: ProductList }) {
                          : borderRadius === 'pill' ? 'rounded-[1.75rem]' 
                          : 'rounded-xl';
 
+    const productUrl = activeCategory ? `/product/${product.slug}?category=${activeCategory}` : `/product/${product.slug}`;
+
     return (
         <div className={cardClasses} style={{ backgroundColor: bgColor }}>
             <div className={`p-3 h-full flex flex-col`}>
                 {/* Image Wrapper (Clickable) */}
-                <Link href={`/product/${product.slug}`} className={`block relative ${imageAspect} bg-gray-50 overflow-hidden ${imgRadiusClass} cursor-pointer`}>
-                    {product.image ? (
+                <Link href={productUrl} className={`block relative ${imageAspect} bg-gray-50 overflow-hidden ${imgRadiusClass} cursor-pointer`}>
+                    {(product.video || product.image) ? (
                         <>
-                            {/* Main Default Image */}
-                            <Image
-                                src={product.image}
-                                alt={product.name}
-                                fill
-                                unoptimized
-                                className={`object-cover object-center transition-all duration-500 ease-out ${product.hover_image ? 'group-hover:opacity-0 group-hover:scale-[1.03]' : 'group-hover:scale-[1.03]'}`}
-                            />
-                            {/* Reveal Hover Variation Image */}
-                            {product.hover_image && (
+                            {/* Main Default Media */}
+                            {(product.video || (product.image && product.image.match(/\.(mp4|webm|mov|qt)$/i))) ? (
+                                <video 
+                                    src={product.video || product.image!} 
+                                    className={`object-cover object-center absolute inset-0 w-full h-full transition-all duration-500 ease-out ${product.hover_image ? 'group-hover:opacity-0 group-hover:scale-[1.03]' : 'group-hover:scale-[1.03]'}`} 
+                                    autoPlay 
+                                    loop 
+                                    muted 
+                                    playsInline 
+                                />
+                            ) : (
                                 <Image
-                                    src={product.hover_image}
-                                    alt={`${product.name} alternate view`}
+                                    src={product.image!}
+                                    alt={product.name}
                                     fill
                                     unoptimized
-                                    className="object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500 ease-out"
+                                    className={`object-cover object-center transition-all duration-500 ease-out ${product.hover_image ? 'group-hover:opacity-0 group-hover:scale-[1.03]' : 'group-hover:scale-[1.03]'}`}
                                 />
+                            )}
+                            {/* Reveal Hover Variation Image */}
+                            {product.hover_image && (
+                                product.hover_image.match(/\.(mp4|webm|mov|qt)$/i) ? (
+                                    <video 
+                                        src={product.hover_image} 
+                                        className="object-cover object-center absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500 ease-out" 
+                                        autoPlay 
+                                        loop 
+                                        muted 
+                                        playsInline 
+                                    />
+                                ) : (
+                                    <Image
+                                        src={product.hover_image}
+                                        alt={`${product.name} alternate view`}
+                                        fill
+                                        unoptimized
+                                        className="object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500 ease-out"
+                                    />
+                                )
                             )}
                             {/* Soft inner shadow/gradient overlay for premium feel */}
                             <div className={`absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${imgRadiusClass}`} />
@@ -97,7 +145,7 @@ export function ProductCard({ product }: { product: ProductList }) {
                     </span>
                     
                     {/* Product Name (Clickable) */}
-                    <Link href={`/product/${product.slug}`} className="block cursor-pointer">
+                    <Link href={productUrl} className="block cursor-pointer">
                         <h3 className="text-sm font-heading font-medium text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
                             {product.name}
                         </h3>
@@ -163,13 +211,16 @@ export function ProductCard({ product }: { product: ProductList }) {
                             {/* Wishlist */}
                             {wishlistStyle !== 'hidden' && (
                                 <button
-                                    className={`flex shrink-0 items-center justify-center gap-1.5 border border-gray-200 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all active:scale-95 cursor-pointer ${wishlistStyle === 'icon_only' ? 'w-9 h-9' : 'flex-1 py-2.5 px-3'}`}
-                                    aria-label="Add to Wishlist"
+                                    onClick={handleWishlistToggle}
+                                    className={`flex shrink-0 items-center justify-center gap-1.5 border rounded-lg transition-all active:scale-95 cursor-pointer
+                                        ${wishlisted ? 'border-red-300 bg-red-50 text-red-500' : 'border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200'}
+                                        ${wishlistStyle === 'icon_only' ? 'w-9 h-9' : 'flex-1 py-2.5 px-3'}`}
+                                    aria-label={wishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                                 >
-                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 shrink-0" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
-                                    {wishlistStyle !== 'icon_only' && <span className="text-xs font-bold uppercase tracking-wider">Wishlist</span>}
+                                    {wishlistStyle !== 'icon_only' && <span className="text-xs font-bold uppercase tracking-wider">{wishlisted ? 'Saved' : 'Wishlist'}</span>}
                                 </button>
                             )}
 

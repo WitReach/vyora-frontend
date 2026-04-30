@@ -57,7 +57,8 @@ export default function CheckoutPage() {
                 address: form.address,
                 items: cart.items.map(item => ({
                     sku_id: item.skuId,
-                    quantity: item.quantity
+                    quantity: item.quantity,
+                    image: item.image
                 }))
             };
 

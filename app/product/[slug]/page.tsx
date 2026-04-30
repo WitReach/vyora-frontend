@@ -5,9 +5,12 @@ import { notFound } from "next/navigation";
 export const dynamic = 'force-dynamic'; // Never cache — always fetch fresh from API
 
 // Fetch product data
-async function getProduct(slug: string): Promise<ProductDetail | null> {
+async function getProduct(slug: string, category?: string): Promise<ProductDetail | null> {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${slug}`, {
+        const url = category 
+            ? `${process.env.NEXT_PUBLIC_API_URL}/products/${slug}?category=${category}`
+            : `${process.env.NEXT_PUBLIC_API_URL}/products/${slug}`;
+        const res = await fetch(url, {
             cache: 'no-store'
         });
         if (!res.ok) return null;
@@ -46,12 +49,20 @@ async function getProductCoupons(): Promise<any[]> {
     }
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProductPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ slug: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
     const resolvedParams = await params;
+    const resolvedSearchParams = await searchParams;
+    const category = typeof resolvedSearchParams.category === 'string' ? resolvedSearchParams.category : undefined;
 
     // Fetch product + policies + coupons in parallel
     const [product, policies, coupons] = await Promise.all([
-        getProduct(resolvedParams.slug),
+        getProduct(resolvedParams.slug, category),
         getPolicies(),
         getProductCoupons(),
     ]);

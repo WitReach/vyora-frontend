@@ -395,7 +395,7 @@ function ProductListingInner({ title, initialFilters, baseEndpoint = '/api/produ
                     ) : (
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8 lg:gap-y-12">
                             {products.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                                <ProductCard key={product.id} product={product} activeCategory={activeQueryKey === 'category' ? activeQueryValue : undefined} />
                             ))}
                         </div>
                     )}

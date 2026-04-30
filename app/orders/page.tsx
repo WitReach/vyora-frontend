@@ -57,7 +57,7 @@ export default function MyOrdersPage() {
     if (loading) return <div className="p-8 text-center">Loading orders...</div>;
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto px-4 py-12">
             <h1 className="text-2xl font-bold mb-8">My Orders</h1>
 
             {orders.length === 0 ? (

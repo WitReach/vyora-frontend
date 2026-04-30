@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -11,6 +11,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 
 export default function ProductCarousel({ data, isFluid }: { data: any; isFluid?: boolean }) {
+    const id = useId();
+    const sectionId = id.replace(/:/g, '');
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -33,17 +35,38 @@ export default function ProductCarousel({ data, isFluid }: { data: any; isFluid?
     if (products.length === 0) return null;
 
     return (
-        <section className="py-12 bg-white">
+        <section className="py-16 bg-white overflow-hidden">
             <div className={isFluid ? 'w-full px-4 md:px-8' : 'container mx-auto px-4'}>
-                {data.title && (
-                    <h2 className="text-3xl font-bold text-center mb-8">{data.title}</h2>
-                )}
+                <div className="flex items-end justify-between mb-10">
+                    <div className="space-y-2">
+                        {data.title && (
+                            <h2 className="text-3xl md:text-4xl font-heading font-bold text-gray-900 tracking-tight">{data.title}</h2>
+                        )}
+                        {data.subtitle && (
+                            <p className="text-sm md:text-base text-gray-500 font-medium max-w-xl">{data.subtitle}</p>
+                        )}
+                    </div>
+                    
+                    {/* Custom Navigation Arrows */}
+                    <div className="hidden md:flex items-center gap-3">
+                        <button className={`prev-${sectionId} w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-black hover:bg-black hover:text-white transition-all duration-300 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed`}>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        <button className={`next-${sectionId} w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-black hover:bg-black hover:text-white transition-all duration-300 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed`}>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                    </div>
+                </div>
 
-                <Swiper
-                    modules={[Navigation]}
-                    navigation
-                    spaceBetween={20}
-                    slidesPerView={1}
+                <div className="relative">
+                    <Swiper
+                        modules={[Navigation]}
+                        navigation={{
+                            prevEl: `.prev-${sectionId}`,
+                            nextEl: `.next-${sectionId}`,
+                        }}
+                        spaceBetween={24}
+                        slidesPerView={1.2}
                     breakpoints={{
                         640: { slidesPerView: 2 },
                         768: { slidesPerView: 3 },
@@ -87,6 +110,7 @@ export default function ProductCarousel({ data, isFluid }: { data: any; isFluid?
                         );
                     })}
                 </Swiper>
+                </div>
             </div>
         </section>
     );

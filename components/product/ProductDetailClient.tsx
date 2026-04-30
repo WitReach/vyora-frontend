@@ -55,12 +55,16 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
     };
 
     const cleanMasterImage = sanitizeUrl(product.image);
+    const cleanMasterVideo = sanitizeUrl(product.video);
     
     // De-duplicate images based on URL in case Master was also uploaded to gallery
     const uniqueImages = useMemo(() => {
         const map = new Map();
+        if (cleanMasterVideo) {
+            map.set(cleanMasterVideo, { id: 'master_video', url: cleanMasterVideo, color_id: null });
+        }
         if (cleanMasterImage) {
-            map.set(cleanMasterImage, { id: 'master', url: cleanMasterImage, color_id: null });
+            map.set(cleanMasterImage, { id: 'master_image', url: cleanMasterImage, color_id: null });
         }
         product.images?.forEach(img => {
             const sanitized = sanitizeUrl(img.url);
@@ -69,7 +73,7 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
             }
         });
         return Array.from(map.values());
-    }, [product.image, product.images]);
+    }, [product.image, product.video, product.images]);
 
     // 2. Parse Variants & Attributes
     const colors = useMemo(() => {
@@ -104,6 +108,22 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
                 return (iA !== -1 ? iA : 99) - (iB !== -1 ? iB : 99);
             });
     }, [product.variants, product.size_chart]);
+
+    // Handle selecting a size first (if no color is picked, find one that has this size)
+    const handleSizeSelect = (size: string) => {
+        if (!selectedColor) {
+            // Find first color that has this size in stock
+            const firstGoodColor = product.variants.find(v => 
+                v.attributes.find(a => a.name === 'Size')?.value === size && 
+                v.stock > 0
+            )?.attributes.find(a => a.name === 'Color')?.value;
+            
+            if (firstGoodColor) {
+                setSelectedColor(firstGoodColor);
+            }
+        }
+        setSelectedSize(size);
+    };
 
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -185,13 +205,24 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
                             "relative bg-gray-50 overflow-hidden", 
                             idx === 0 && !selectedColor ? "col-span-2 md:h-[calc(100vh-4rem)]" : "col-span-1 aspect-[3/4]"
                         )}>
-                            <Image 
-                                src={img.url} 
-                                alt={`${product.name} view ${idx+1}`} 
-                                fill 
-                                className={cn(idx === 0 && !selectedColor ? "object-contain" : "object-cover", "object-center")} 
-                                priority={idx < 2} 
-                            />
+                            {img.url.match(/\.(mp4|webm|mov|qt)$/i) ? (
+                                <video 
+                                    src={img.url} 
+                                    className={cn(idx === 0 && !selectedColor ? "object-contain" : "object-cover", "object-center w-full h-full absolute inset-0")} 
+                                    autoPlay 
+                                    loop 
+                                    muted 
+                                    playsInline 
+                                />
+                            ) : (
+                                <Image 
+                                    src={img.url} 
+                                    alt={`${product.name} view ${idx+1}`} 
+                                    fill 
+                                    className={cn(idx === 0 && !selectedColor ? "object-contain" : "object-cover", "object-center")} 
+                                    priority={idx < 2} 
+                                />
+                            )}
                         </div>
                     ))}
                 </div>
@@ -207,7 +238,11 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
                     >
                         {displayedImages.map((img, idx) => (
                             <SwiperSlide key={img.id || idx} className="relative w-full h-full bg-gray-50">
-                                <Image src={img.url} alt={`${product.name} view ${idx+1}`} fill className="object-cover object-center" priority={idx === 0} />
+                                {img.url.match(/\.(mp4|webm|mov|qt)$/i) ? (
+                                    <video src={img.url} className="w-full h-full object-cover object-center absolute inset-0" autoPlay loop muted playsInline />
+                                ) : (
+                                    <Image src={img.url} alt={`${product.name} view ${idx+1}`} fill className="object-cover object-center" priority={idx === 0} />
+                                )}
                             </SwiperSlide>
                         ))}
                     </Swiper>
@@ -346,7 +381,11 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
                                                 selectedColor === color.value ? "ring-2 ring-offset-2 ring-black shadow-lg scale-105" : "border-2 border-transparent hover:border-gray-300 opacity-80 hover:opacity-100"
                                             )}
                                         >
-                                            <Image src={matchingImg.url} alt={color.value} fill className="object-cover" />
+                                            {matchingImg.url.match(/\.(mp4|webm|mov|qt)$/i) ? (
+                                                <video src={matchingImg.url} className="w-full h-full object-cover absolute inset-0" autoPlay loop muted playsInline />
+                                            ) : (
+                                                <Image src={matchingImg.url} alt={color.value} fill className="object-cover" />
+                                            )}
                                             {/* Hover Tooltip Overlay mapped over visually */}
                                             <span className="absolute inset-x-0 bottom-0 bg-black/60 pt-6 pb-1 flex items-center justify-center text-[9px] text-white font-bold tracking-wider opacity-0 group-hover:opacity-100 transition-opacity uppercase z-10 text-center leading-none">
                                                 {color.value}
@@ -368,14 +407,14 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
                             <div className="flex flex-wrap gap-2.5">
                                 {sizes.map(size => {
                                     const isAvailable = product.variants.some(v =>
-                                        v.attributes.find(a => a.name === 'Color')?.value === selectedColor &&
+                                        (selectedColor ? v.attributes.find(a => a.name === 'Color')?.value === selectedColor : true) &&
                                         v.attributes.find(a => a.name === 'Size')?.value === size &&
                                         v.stock > 0
                                     );
                                     return (
                                         <button
                                             key={size}
-                                            onClick={() => setSelectedSize(size)}
+                                            onClick={() => handleSizeSelect(size)}
                                             disabled={!isAvailable}
                                             className={cn(
                                                 "w-[calc(25%-7.5px)] sm:w-16 py-3.5 flex items-center justify-center bg-white border rounded-xl text-sm font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-black",
@@ -571,7 +610,11 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
             <div className="flex items-center gap-4 px-6 pt-14 pb-5 border-b border-gray-100">
                 {activeColorImage && (
                     <div className="relative w-20 h-24 rounded-xl overflow-hidden shrink-0 bg-gray-50">
-                        <Image src={activeColorImage.url} alt={product.name} fill className="object-cover" />
+                        {activeColorImage.url.match(/\.(mp4|webm|mov|qt)$/i) ? (
+                            <video src={activeColorImage.url} className="w-full h-full object-cover absolute inset-0" autoPlay loop muted playsInline />
+                        ) : (
+                            <Image src={activeColorImage.url} alt={product.name} fill className="object-cover" />
+                        )}
                     </div>
                 )}
                 <div className="min-w-0">
@@ -629,7 +672,7 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
                                         return (
                                             <tr
                                                 key={row.size_code}
-                                                onClick={() => isAvailable && setSelectedSize(sizes.find(s => s.toUpperCase() === row.size_code.toUpperCase()) || row.size_code)}
+                                                onClick={() => isAvailable && handleSizeSelect(sizes.find(s => s.toUpperCase() === row.size_code.toUpperCase()) || row.size_code)}
                                                 className={cn(
                                                     "transition-colors text-xs sm:text-sm",
                                                     isSelected

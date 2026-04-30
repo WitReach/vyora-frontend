@@ -1,18 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, User, LogOut, ChevronDown } from 'lucide-react';
+import { ShoppingBag, User, LogOut, ChevronDown, Heart } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { useState, useEffect } from 'react';
 import { useUIStore } from '@/store/ui';
+import { useWishlistStore } from '@/store/wishlist';
 
 export default function Navbar({ settings }: { settings?: any }) {
     const cart = useCartStore();
     const { user, logout } = useAuthStore();
     const { openAuthModal } = useUIStore();
+    const { items: wishlistItems } = useWishlistStore();
     const [mounted, setMounted] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
+    const [hiddenMenuId, setHiddenMenuId] = useState<string | null>(null);
 
     const isMegaMenu = settings?.navbar_style === 'mega_menu';
     const isCustom = settings?.navbar_style === 'custom';
@@ -69,16 +72,20 @@ export default function Navbar({ settings }: { settings?: any }) {
         return '';
     };
 
-    const renderDynamicLink = (item: any, isChild = false) => {
+    const renderDynamicLink = (item: any, isChild = false, parentId: string | null = null) => {
         let href = '/shop';
         if (item.type === 'link') href = item.link || '/';
         if (item.type === 'category') href = `/shop?category=${item.ref_id}`;
         if (item.type === 'collection') href = `/shop?collection=${item.ref_id}`;
         if (item.type === 'page') href = `/${item.ref_id}`;
 
+        const handleClick = () => {
+            if (parentId) setHiddenMenuId(parentId);
+        };
+
         if (item.type === 'image') {
             return (
-                <Link href={item.link || '/shop'} className="block w-full group/promo">
+                <Link href={item.link || '/shop'} className="block w-full group/promo" onClick={handleClick}>
                     <div className="w-full bg-gray-50 rounded-xl flex flex-col items-center justify-center border border-gray-100 overflow-hidden relative cursor-pointer">
                         {item.image_url ? (
                             <img src={item.image_url} alt={item.label || 'Promo'} className="w-full h-auto object-cover" />
@@ -103,7 +110,7 @@ export default function Navbar({ settings }: { settings?: any }) {
             : `text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5 relative ${getHoverClasses(false)}`;
 
         return (
-            <Link href={href} className={className}>
+            <Link href={href} className={className} onClick={handleClick}>
                 {item.label}
             </Link>
         );
@@ -115,7 +122,7 @@ export default function Navbar({ settings }: { settings?: any }) {
         return (
             <>
                 {menuItems.map((item: any) => (
-                    <div key={item.id} className="group hidden md:block">
+                    <div key={item.id} className="group hidden md:block" onMouseLeave={() => setHiddenMenuId(null)}>
                         {item.type === 'mega_menu' ? (
                             <>
                                         {item.root_type && item.root_type !== '' ? (
@@ -124,7 +131,7 @@ export default function Navbar({ settings }: { settings?: any }) {
                                                 item.root_type === 'category' ? `/shop?category=${item.root_ref_id}` :
                                                 item.root_type === 'collection' ? `/shop?collection=${item.root_ref_id}` :
                                                 item.root_type === 'page' ? `/${item.root_ref_id}` : '#'
-                                            } className={`cursor-pointer text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5 relative ${getHoverClasses(false)}`}>
+                                            } className={`cursor-pointer text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5 relative ${getHoverClasses(false)}`} onClick={() => setHiddenMenuId(item.id)}>
                                                 {item.label} <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-black transition-colors" />
                                             </Link>
                                         ) : (
@@ -132,7 +139,7 @@ export default function Navbar({ settings }: { settings?: any }) {
                                                 {item.label} <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-black transition-colors" />
                                             </div>
                                         )}
-                                <div className="absolute left-0 top-full mt-0 w-full bg-white border-b border-t shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top -translate-y-2 group-hover:translate-y-0 z-[100]">
+                                <div className={`absolute left-0 top-full mt-0 w-full bg-white border-b border-t shadow-xl transition-all duration-300 transform origin-top z-[100] ${hiddenMenuId === item.id ? 'opacity-0 invisible pointer-events-none' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible -translate-y-2 group-hover:translate-y-0'}`}>
                                     <div className="max-w-7xl mx-auto px-4 py-8">
                                         {/* tailwind scanner safelist: grid-cols-2 grid-cols-3 grid-cols-4 grid-cols-5 grid-cols-6 */}
                                         <div className={`grid gap-8 grid-cols-${item.columns || 4} items-start`}>
@@ -141,13 +148,13 @@ export default function Navbar({ settings }: { settings?: any }) {
                                                     {col.blocks?.map((block: any) => (
                                                         <div key={block.id || Math.random()}>
                                                             {block.type === 'image' ? (
-                                                                renderDynamicLink(block, true)
+                                                                renderDynamicLink(block, true, item.id)
                                                             ) : (
                                                                 <div>
                                                                     {block.label && (
                                                                         <div className="border-b border-gray-100 pb-2 mb-3">
                                                                             {block.link ? (
-                                                                                <Link href={block.link} className="text-sm font-black text-gray-900 uppercase tracking-wide hover:text-black">
+                                                                                <Link href={block.link} className="text-sm font-black text-gray-900 uppercase tracking-wide hover:text-black" onClick={() => setHiddenMenuId(item.id)}>
                                                                                     {block.label}
                                                                                 </Link>
                                                                             ) : (
@@ -159,7 +166,7 @@ export default function Navbar({ settings }: { settings?: any }) {
                                                                         <ul className="space-y-1.5">
                                                                             {block.links.map((link: any) => (
                                                                                 <li key={link.id || Math.random()}>
-                                                                                    {renderDynamicLink(link, true)}
+                                                                                    {renderDynamicLink(link, true, item.id)}
                                                                                 </li>
                                                                             ))}
                                                                         </ul>
@@ -190,9 +197,9 @@ export default function Navbar({ settings }: { settings?: any }) {
                     <Link href="/orders" className="text-sm font-medium hover:text-gray-600">
                         My Orders
                     </Link>
-                    <button onClick={logout} className="text-sm text-red-500 hover:text-red-600">
-                        <LogOut className="w-5 h-5" />
-                    </button>
+                    <Link href="/account" className="text-gray-900 hover:text-gray-600 transition-colors">
+                        <User className="w-5 h-5" />
+                    </Link>
                 </div>
             ) : (
                 isModalMode ? (
@@ -208,6 +215,15 @@ export default function Navbar({ settings }: { settings?: any }) {
                     </Link>
                 )
             )}
+
+            <Link href="/wishlist" className="relative text-gray-900 hover:text-gray-600 transition-colors">
+                <Heart className="w-5 h-5" />
+                {wishlistItems.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                        {wishlistItems.length}
+                    </span>
+                )}
+            </Link>
 
             <Link href="/cart" className="relative text-gray-900 hover:text-gray-600">
                 <ShoppingBag className="w-5 h-5" />
@@ -241,27 +257,27 @@ export default function Navbar({ settings }: { settings?: any }) {
                         {isMegaMenu && (
                             <>
                                 {categories.map((cat) => (
-                                    <div key={cat.id} className="group hidden md:block">
-                                        <Link href={`/shop?category=${cat.slug}`} className="text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5">
+                                    <div key={cat.id} className="group hidden md:block" onMouseLeave={() => setHiddenMenuId(null)}>
+                                        <Link href={`/shop?category=${cat.slug}`} className="text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5" onClick={() => setHiddenMenuId(cat.id)}>
                                             {cat.name} {cat.children && cat.children.length > 0 && <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-black transition-colors" />}
                                         </Link>
                                         
                                         {/* Mega Menu Dropdown */}
                                         {cat.children && cat.children.length > 0 && (
-                                            <div className="absolute left-0 top-[64px] w-full bg-white border-b border-t shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top -translate-y-2 group-hover:translate-y-0 z-[100]">
+                                            <div className={`absolute left-0 top-[64px] w-full bg-white border-b border-t shadow-xl transition-all duration-300 transform origin-top z-[100] ${hiddenMenuId === cat.id ? 'opacity-0 invisible pointer-events-none' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible -translate-y-2 group-hover:translate-y-0'}`}>
                                                 <div className="max-w-7xl mx-auto px-4 py-8">
                                                     <div className="flex gap-16">
                                                         <div className="flex-1 grid grid-cols-3 gap-8">
                                                             {cat.children.map((sub: any) => (
                                                                 <div key={sub.id}>
-                                                                    <Link href={`/shop?category=${sub.slug}`} className="text-sm font-bold text-gray-900 border-b pb-2 mb-3 block hover:text-gray-600 uppercase tracking-wide">
+                                                                    <Link href={`/shop?category=${sub.slug}`} className="text-sm font-bold text-gray-900 border-b pb-2 mb-3 block hover:text-gray-600 uppercase tracking-wide" onClick={() => setHiddenMenuId(cat.id)}>
                                                                         {sub.name}
                                                                     </Link>
                                                                     {sub.children && sub.children.length > 0 && (
                                                                         <ul className="space-y-2.5 mt-4">
                                                                             {sub.children.map((deep: any) => (
                                                                                 <li key={deep.id}>
-                                                                                    <Link href={`/shop?category=${deep.slug}`} className="text-sm text-gray-600 hover:text-black transition-colors block font-medium">
+                                                                                    <Link href={`/shop?category=${deep.slug}`} className="text-sm text-gray-600 hover:text-black transition-colors block font-medium" onClick={() => setHiddenMenuId(cat.id)}>
                                                                                         {deep.name}
                                                                                     </Link>
                                                                                 </li>
