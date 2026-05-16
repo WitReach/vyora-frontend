@@ -8,6 +8,7 @@ export interface ProductList {
     mrp: number;
     discount_percentage: number;
     image: string | null;
+    video?: string | null;
     category: string;
     is_new: boolean;
     hover_image?: string | null;

@@ -34,6 +34,8 @@ async function getSettings() {
   return {};
 }
 
+import Script from "next/script";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -61,6 +63,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href={googleFontsUrl} rel="stylesheet" />
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
       </head>
       <body
         className={`${geistMono.variable} antialiased`}

@@ -59,3 +59,31 @@ a, p, span, li, td, th, blockquote, figcaption {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Premium noise texture */
+.bg-noise {
+  background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+}
+
+.glass-premium {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass-premium {
+  background: rgba(17, 17, 17, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+

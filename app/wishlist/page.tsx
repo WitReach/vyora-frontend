@@ -36,12 +36,13 @@ interface ProductFull {
     variants: ProductVariant[];
     images: ProductImage[];
     coupon_price?: number;
+    tax_class?: string;
 }
 
 // ── Horizontal scrollable row with arrow buttons + mouse wheel ───────────────
 function HScrollRow({ children, className = '' }: { children: React.ReactNode; className?: string }) {
     const ref = useRef<HTMLDivElement>(null);
-    const [canLeft, setCanLeft]   = useState(false);
+    const [canLeft, setCanLeft] = useState(false);
     const [canRight, setCanRight] = useState(false);
 
     const checkScroll = useCallback(() => {
@@ -91,7 +92,7 @@ function HScrollRow({ children, className = '' }: { children: React.ReactNode; c
             <div
                 ref={ref}
                 onWheel={onWheel}
-                className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-1"
+                className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-1 p-1"
             >
                 {children}
             </div>
@@ -112,10 +113,10 @@ function HScrollRow({ children, className = '' }: { children: React.ReactNode; c
 
 // ── Magic Deal widget ────────────────────────────────────────────────────────
 function MagicDealBadge({ couponPrice, policies }: { couponPrice: number; policies: any }) {
-    const bgFrom    = policies?.mega_deal_bg_from    || '#4f46e5';
-    const bgTo      = policies?.mega_deal_bg_to      || '#7c3aed';
+    const bgFrom = policies?.mega_deal_bg_from || '#4f46e5';
+    const bgTo = policies?.mega_deal_bg_to || '#7c3aed';
     const textColor = policies?.mega_deal_text_color || '#ffffff';
-    const icon      = policies?.mega_deal_icon       || '⚡';
+    const icon = policies?.mega_deal_icon || '⚡';
     return (
         <div
             className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
@@ -137,24 +138,24 @@ function WishlistCard({ item, settings, policies, onRemove }: {
     onRemove: (id: number) => void;
 }) {
     const cart = useCartStore();
-    const [productData, setProductData]     = useState<ProductFull | null>(null);
+    const [productData, setProductData] = useState<ProductFull | null>(null);
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
-    const [selectedSize, setSelectedSize]   = useState<string | null>(null);
-    const [added, setAdded]   = useState(false);
+    const [selectedSize, setSelectedSize] = useState<string | null>(null);
+    const [added, setAdded] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Ref to each color button so we can center it
     const colorItemsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
     const colorStripRef = useRef<HTMLDivElement>(null);
 
-    const buyNowStyle  = settings?.pc_buynow_style  || 'text_only';
-    const cartStyle    = settings?.pc_cart_style    || 'hidden';
+    const buyNowStyle = settings?.pc_buynow_style || 'text_only';
+    const cartStyle = settings?.pc_cart_style || 'hidden';
     const borderRadius = settings?.pc_border_radius || 'rounded';
-    const bgColor      = settings?.pc_bg_color      || '#ffffff';
+    const bgColor = settings?.pc_bg_color || '#ffffff';
 
-    const imgRadiusClass  = borderRadius === 'square' ? 'rounded-none' : borderRadius === 'pill' ? 'rounded-[1.75rem]' : 'rounded-xl';
-    const cardRadiusClass = borderRadius === 'square' ? 'rounded-none' : borderRadius === 'pill' ? 'rounded-[2rem]'    : 'rounded-2xl';
+    const imgRadiusClass = borderRadius === 'square' ? 'rounded-none' : borderRadius === 'pill' ? 'rounded-[1.75rem]' : 'rounded-xl';
+    const cardRadiusClass = borderRadius === 'square' ? 'rounded-none' : borderRadius === 'pill' ? 'rounded-[2rem]' : 'rounded-2xl';
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
     const sanitize = (url: string | null | undefined): string | null => {
@@ -180,7 +181,7 @@ function WishlistCard({ item, settings, policies, onRemove }: {
                 const firstSize = vs[0]?.attributes.find(a => a.name === 'Size');
                 if (firstSize) setSelectedSize(firstSize.value);
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setLoading(false));
     }, [item.slug]);
 
@@ -218,7 +219,7 @@ function WishlistCard({ item, settings, policies, onRemove }: {
             const btn = colorItemsRef.current.get(value);
             const strip = colorStripRef.current;
             if (btn && strip) {
-                const btnLeft  = btn.offsetLeft;
+                const btnLeft = btn.offsetLeft;
                 const btnWidth = btn.offsetWidth;
                 const stripWidth = strip.clientWidth;
                 strip.scrollTo({ left: btnLeft - stripWidth / 2 + btnWidth / 2, behavior: 'smooth' });
@@ -228,7 +229,7 @@ function WishlistCard({ item, settings, policies, onRemove }: {
 
     const selectedVariant = variants.find(v => {
         const cMatch = !selectedColor || v.attributes.some(a => a.name === 'Color' && a.value === selectedColor);
-        const sMatch = !selectedSize  || v.attributes.some(a => a.name === 'Size'  && a.value === selectedSize);
+        const sMatch = !selectedSize || v.attributes.some(a => a.name === 'Size' && a.value === selectedSize);
         return cMatch && sMatch;
     });
 
@@ -251,15 +252,18 @@ function WishlistCard({ item, settings, policies, onRemove }: {
     })();
 
     const displayPrice = selectedVariant?.price ?? item.price;
-    const displayMrp   = selectedVariant?.mrp   ?? item.mrp;
-    const couponPrice  = productData?.coupon_price;
+    const displayMrp = selectedVariant?.mrp ?? item.mrp;
+    const couponPrice = productData?.coupon_price;
 
     const handleAddToCart = () => {
         if (!selectedVariant || isOos) return;
         cart.addItem({
             skuId: selectedVariant.id, productId: item.productId, name: item.name, slug: item.slug,
             variant: [selectedColor, selectedSize].filter(Boolean).join(' - '),
-            price: selectedVariant.price, image: displayImage || item.image || '', quantity: 1,
+            price: selectedVariant.price, 
+            mrp: Math.max(Number(selectedVariant.mrp) || 0, Number(productData?.mrp) || 0, Number(selectedVariant.price)),
+            image: displayImage || item.image || '', quantity: 1,
+            tax_class: productData?.tax_class
         });
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
@@ -366,8 +370,8 @@ function WishlistCard({ item, settings, policies, onRemove }: {
                 {/* Loading skeleton */}
                 {loading && (
                     <div className="space-y-1.5">
-                        <div className="flex gap-1.5">{[1,2,3].map(i => <div key={i} className="h-5 w-5 rounded-full bg-gray-100 animate-pulse shrink-0" />)}</div>
-                        <div className="flex gap-1.5">{[1,2,3,4].map(i => <div key={i} className="h-5 w-7 rounded bg-gray-100 animate-pulse shrink-0" />)}</div>
+                        <div className="flex gap-1.5">{[1, 2, 3].map(i => <div key={i} className="h-5 w-5 rounded-full bg-gray-100 animate-pulse shrink-0" />)}</div>
+                        <div className="flex gap-1.5">{[1, 2, 3, 4].map(i => <div key={i} className="h-5 w-7 rounded bg-gray-100 animate-pulse shrink-0" />)}</div>
                     </div>
                 )}
 
@@ -427,7 +431,7 @@ export default function WishlistPage() {
     const { user } = useAuthStore();
     const { openAuthModal } = useUIStore();
     const settings = useSettings();
-    const [mounted, setMounted]   = useState(false);
+    const [mounted, setMounted] = useState(false);
     const [policies, setPolicies] = useState<any>({});
 
     const authAppearance = typeof settings?.auth_appearance === 'string'
@@ -438,7 +442,7 @@ export default function WishlistPage() {
     useEffect(() => {
         setMounted(true);
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
-        fetch(`${apiUrl}/settings`).then(r => r.json()).then(d => setPolicies(d.policies || {})).catch(() => {});
+        fetch(`${apiUrl}/settings`).then(r => r.json()).then(d => setPolicies(d.policies || {})).catch(() => { });
     }, []);
 
     if (!mounted) return <div className="min-h-[60vh]" />;

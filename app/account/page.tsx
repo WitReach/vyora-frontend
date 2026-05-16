@@ -8,11 +8,11 @@ import api from '@/lib/api';
 import {
     User, Lock, MapPin, Package, LogOut, ChevronRight,
     Eye, EyeOff, Check, AlertCircle, Plus, Trash2, Pencil,
-    ArrowRight, Shield, Bell
+    ArrowRight, Shield, Bell, Gift, Wallet
 } from 'lucide-react';
 
 // ── Section tab ids ──────────────────────────────────────────────────────────
-type Tab = 'profile' | 'security' | 'addresses' | 'orders';
+type Tab = 'profile' | 'security' | 'addresses' | 'orders' | 'gift-cards';
 
 // ── Reusable section card ────────────────────────────────────────────────────
 function SectionCard({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
@@ -304,10 +304,11 @@ export default function AccountPage() {
     }
 
     const navTabs: { id: Tab; label: string; icon: any }[] = [
-        { id: 'profile',   label: 'Profile',   icon: User   },
-        { id: 'security',  label: 'Security',  icon: Shield },
-        { id: 'addresses', label: 'Addresses', icon: MapPin },
-        { id: 'orders',    label: 'Orders',    icon: Package },
+        { id: 'profile',     label: 'Profile',     icon: User    },
+        { id: 'security',    label: 'Security',    icon: Shield  },
+        { id: 'addresses',   label: 'Addresses',   icon: MapPin  },
+        { id: 'orders',      label: 'Orders',      icon: Package },
+        { id: 'gift-cards',  label: 'Gift Cards',  icon: Gift    },
     ];
 
     return (
@@ -351,10 +352,10 @@ export default function AccountPage() {
 
                 {/* Content */}
                 <main className="flex-1 space-y-6 min-w-0">
-                    {activeTab === 'profile'   && <ProfileSection user={userData || user} onSaved={() => api.get('/api/user').then(r => setUserData(r.data)).catch(() => {})} />}
-                    {activeTab === 'security'  && <SecuritySection />}
-                    {activeTab === 'addresses' && <AddressesSection />}
-                    {activeTab === 'orders'    && (
+                    {activeTab === 'profile'     && <ProfileSection user={userData || user} onSaved={() => api.get('/api/user').then(r => setUserData(r.data)).catch(() => {})} />}
+                    {activeTab === 'security'    && <SecuritySection />}
+                    {activeTab === 'addresses'   && <AddressesSection />}
+                    {activeTab === 'orders'      && (
                         <SectionCard title="My Orders" icon={Package}>
                             <div className="text-center py-8">
                                 <Package className="w-10 h-10 text-gray-200 mx-auto mb-3" />
@@ -362,6 +363,22 @@ export default function AccountPage() {
                                 <Link href="/orders" className="inline-flex items-center gap-2 bg-black text-white text-xs font-bold uppercase tracking-wider px-6 py-2.5 rounded-xl hover:bg-gray-800 transition-all">
                                     Go to Orders <ArrowRight className="w-3.5 h-3.5" />
                                 </Link>
+                            </div>
+                        </SectionCard>
+                    )}
+                    {activeTab === 'gift-cards' && (
+                        <SectionCard title="Gift Cards" icon={Gift}>
+                            <div className="text-center py-8">
+                                <Gift className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                                <p className="text-sm text-gray-500 mb-4">Manage your gift cards, wallet balance, and send gifts.</p>
+                                <div className="flex gap-3 justify-center">
+                                    <Link href="/gift-cards/my-cards" className="inline-flex items-center gap-2 bg-black text-white text-xs font-bold uppercase tracking-wider px-6 py-2.5 rounded-xl hover:bg-gray-800 transition-all">
+                                        <Wallet className="w-3.5 h-3.5" /> My Wallet
+                                    </Link>
+                                    <Link href="/gift-cards" className="inline-flex items-center gap-2 border border-gray-200 text-gray-600 text-xs font-bold uppercase tracking-wider px-6 py-2.5 rounded-xl hover:border-gray-400 transition-all">
+                                        <Gift className="w-3.5 h-3.5" /> Buy Cards
+                                    </Link>
+                                </div>
                             </div>
                         </SectionCard>
                     )}

@@ -6,10 +6,25 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
-    // Removed withCredentials to avoid CORS wildcard blocking from Chrome
 });
 
-// Add a request interceptor to attach bearer token if we have one (for later auth)
-// api.interceptors.request.use((config) => { ... });
+// Request interceptor to attach bearer token from localStorage (via zustand or manual)
+api.interceptors.request.use((config) => {
+    if (typeof window !== 'undefined') {
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+            try {
+                const parsed = JSON.parse(authStorage);
+                const token = parsed?.state?.token;
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+            } catch (e) {
+                console.error('Error parsing auth storage', e);
+            }
+        }
+    }
+    return config;
+});
 
 export default api;

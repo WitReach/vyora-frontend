@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, User, LogOut, ChevronDown, Heart } from 'lucide-react';
+import { ShoppingBag, User, LogOut, ChevronDown, Heart, Search } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { useState, useEffect } from 'react';
@@ -19,7 +19,7 @@ export default function Navbar({ settings }: { settings?: any }) {
 
     const isMegaMenu = settings?.navbar_style === 'mega_menu';
     const isCustom = settings?.navbar_style === 'custom';
-    
+
     // Custom settings
     const alignment = settings?.nav_alignment || 'left';
     const position = settings?.nav_position || 'inline';
@@ -28,7 +28,7 @@ export default function Navbar({ settings }: { settings?: any }) {
         if (settings?.menu_structure) {
             menuItems = JSON.parse(settings.menu_structure);
         }
-    } catch(e) {}
+    } catch (e) { }
 
     useEffect(() => {
         setMounted(true);
@@ -46,8 +46,8 @@ export default function Navbar({ settings }: { settings?: any }) {
     const storeName = settings?.store_name || "DOPE STYLE";
     const logoRelPath = settings?.main_logo;
 
-    const authAppearance = typeof settings?.auth_appearance === 'string' 
-        ? JSON.parse(settings.auth_appearance) 
+    const authAppearance = typeof settings?.auth_appearance === 'string'
+        ? JSON.parse(settings.auth_appearance)
         : (settings?.auth_appearance || {});
     const isModalMode = authAppearance.ux_mode === 'modal';
 
@@ -62,7 +62,7 @@ export default function Navbar({ settings }: { settings?: any }) {
     const getHoverClasses = (isChild = false) => {
         if (hoverStyle === 'none') return '';
         const bottomPos = isChild ? 'before:bottom-0' : 'before:bottom-2';
-        
+
         if (hoverStyle === 'underline') {
             return `before:absolute ${bottomPos} before:left-0 before:w-full before:h-[2px] before:bg-black before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300`;
         }
@@ -105,7 +105,7 @@ export default function Navbar({ settings }: { settings?: any }) {
             );
         }
 
-        const className = isChild 
+        const className = isChild
             ? `text-sm text-gray-500 hover:text-black transition-colors py-1 w-fit relative block ${getHoverClasses(true)}`
             : `text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5 relative ${getHoverClasses(false)}`;
 
@@ -125,20 +125,20 @@ export default function Navbar({ settings }: { settings?: any }) {
                     <div key={item.id} className="group hidden md:block" onMouseLeave={() => setHiddenMenuId(null)}>
                         {item.type === 'mega_menu' ? (
                             <>
-                                        {item.root_type && item.root_type !== '' ? (
-                                            <Link href={
-                                                item.root_type === 'url' ? (item.root_url || '#') :
-                                                item.root_type === 'category' ? `/shop?category=${item.root_ref_id}` :
+                                {item.root_type && item.root_type !== '' ? (
+                                    <Link href={
+                                        item.root_type === 'url' ? (item.root_url || '#') :
+                                            item.root_type === 'category' ? `/shop?category=${item.root_ref_id}` :
                                                 item.root_type === 'collection' ? `/shop?collection=${item.root_ref_id}` :
-                                                item.root_type === 'page' ? `/${item.root_ref_id}` : '#'
-                                            } className={`cursor-pointer text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5 relative ${getHoverClasses(false)}`} onClick={() => setHiddenMenuId(item.id)}>
-                                                {item.label} <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-black transition-colors" />
-                                            </Link>
-                                        ) : (
-                                            <div className={`cursor-pointer text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5 relative ${getHoverClasses(false)}`}>
-                                                {item.label} <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-black transition-colors" />
-                                            </div>
-                                        )}
+                                                    item.root_type === 'page' ? `/${item.root_ref_id}` : '#'
+                                    } className={`cursor-pointer text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5 relative ${getHoverClasses(false)}`} onClick={() => setHiddenMenuId(item.id)}>
+                                        {item.label} <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-black transition-colors" />
+                                    </Link>
+                                ) : (
+                                    <div className={`cursor-pointer text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5 relative ${getHoverClasses(false)}`}>
+                                        {item.label} <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-black transition-colors" />
+                                    </div>
+                                )}
                                 <div className={`absolute left-0 top-full mt-0 w-full bg-white border-b border-t shadow-xl transition-all duration-300 transform origin-top z-[100] ${hiddenMenuId === item.id ? 'opacity-0 invisible pointer-events-none' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible -translate-y-2 group-hover:translate-y-0'}`}>
                                     <div className="max-w-7xl mx-auto px-4 py-8">
                                         {/* tailwind scanner safelist: grid-cols-2 grid-cols-3 grid-cols-4 grid-cols-5 grid-cols-6 */}
@@ -203,7 +203,7 @@ export default function Navbar({ settings }: { settings?: any }) {
                 </div>
             ) : (
                 isModalMode ? (
-                    <button 
+                    <button
                         onClick={() => openAuthModal('login')}
                         className="text-sm font-medium hover:text-gray-600 flex items-center gap-1"
                     >
@@ -215,6 +215,10 @@ export default function Navbar({ settings }: { settings?: any }) {
                     </Link>
                 )
             )}
+
+            <Link href="/search" className="text-gray-900 hover:text-gray-600 transition-colors">
+                <Search className="w-5 h-5" />
+            </Link>
 
             <Link href="/wishlist" className="relative text-gray-900 hover:text-gray-600 transition-colors">
                 <Heart className="w-5 h-5" />
@@ -261,7 +265,7 @@ export default function Navbar({ settings }: { settings?: any }) {
                                         <Link href={`/shop?category=${cat.slug}`} className="text-sm font-medium hover:text-gray-600 flex items-center gap-1 py-5" onClick={() => setHiddenMenuId(cat.id)}>
                                             {cat.name} {cat.children && cat.children.length > 0 && <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-black transition-colors" />}
                                         </Link>
-                                        
+
                                         {/* Mega Menu Dropdown */}
                                         {cat.children && cat.children.length > 0 && (
                                             <div className={`absolute left-0 top-[64px] w-full bg-white border-b border-t shadow-xl transition-all duration-300 transform origin-top z-[100] ${hiddenMenuId === cat.id ? 'opacity-0 invisible pointer-events-none' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible -translate-y-2 group-hover:translate-y-0'}`}>

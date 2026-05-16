@@ -8,8 +8,10 @@ export interface CartItem {
     slug: string;
     variant: string; // "Black - L"
     price: number;
+    mrp?: number;
     image: string;
     quantity: number;
+    tax_class?: string;
 }
 
 interface CartState {
@@ -19,12 +21,17 @@ interface CartState {
     updateQuantity: (skuId: number, quantity: number) => void;
     clearCart: () => void;
     total: () => number;
+    appliedCoupon: { code: string; discountAmount: number } | null;
+    setAppliedCoupon: (coupon: { code: string; discountAmount: number } | null) => void;
 }
 
 export const useCartStore = create<CartState>()(
     persist(
         (set, get) => ({
             items: [],
+            appliedCoupon: null,
+
+            setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),
 
             addItem: (newItem) => set((state) => {
                 const existing = state.items.find(i => i.skuId === newItem.skuId);
@@ -32,7 +39,7 @@ export const useCartStore = create<CartState>()(
                     return {
                         items: state.items.map(i =>
                             i.skuId === newItem.skuId
-                                ? { ...i, quantity: i.quantity + newItem.quantity }
+                                ? { ...i, quantity: i.quantity + newItem.quantity, price: newItem.price, mrp: newItem.mrp }
                                 : i
                         )
                     };
@@ -50,7 +57,7 @@ export const useCartStore = create<CartState>()(
                 )
             })),
 
-            clearCart: () => set({ items: [] }),
+            clearCart: () => set({ items: [], appliedCoupon: null }),
 
             total: () => {
                 return get().items.reduce((sum, item) => sum + (item.price * item.quantity), 0);

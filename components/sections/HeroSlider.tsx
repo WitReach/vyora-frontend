@@ -35,8 +35,8 @@ export default function HeroSlider({ data }: { data: any }) {
                 autoplay={{ delay: 5000, disableOnInteraction: false }}
                 className="w-full h-[500px] md:h-[650px] lg:h-[800px]"
             >
-                {data.slides.map((slide: any, index: number) => (
-                    <SwiperSlide key={index} className="relative w-full h-full">
+                {data.slides.map((slide: any, index: number) => {
+                    const SlideContent = (
                         <div className="relative w-full h-full">
                             <Image
                                 src={slide.image || '/placeholder.jpg'}
@@ -54,7 +54,6 @@ export default function HeroSlider({ data }: { data: any }) {
                                                 {slide.title}
                                             </h2>
                                         )}
-                                        <div className="h-1.5 w-24 bg-white rounded-full animate-in fade-in slide-in-from-left-12 duration-1000 delay-100" />
                                     </div>
                                     
                                     {slide.subtitle && (
@@ -62,19 +61,23 @@ export default function HeroSlider({ data }: { data: any }) {
                                             {slide.subtitle}
                                         </p>
                                     )}
-                                    {slide.link && (
-                                        <Link
-                                            href={slide.link}
-                                            className="inline-flex items-center justify-center bg-white text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-black hover:text-white transition-all duration-500 transform hover:scale-105 active:scale-95 shadow-xl animate-in fade-in slide-in-from-left-8 duration-700 delay-300"
-                                        >
-                                            Explore Now
-                                        </Link>
-                                    )}
                                 </div>
                             </div>
                         </div>
-                    </SwiperSlide>
-                ))}
+                    );
+
+                    return (
+                        <SwiperSlide key={index} className="relative w-full h-full">
+                            {slide.link ? (
+                                <Link href={slide.link} className="block w-full h-full">
+                                    {SlideContent}
+                                </Link>
+                            ) : (
+                                SlideContent
+                            )}
+                        </SwiperSlide>
+                    );
+                })}
             </Swiper>
 
             {/* Custom Premium Arrows */}
