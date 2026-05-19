@@ -25,6 +25,9 @@ interface Order {
     created_at: string;
     items_count: number;
     items: OrderItem[];
+    tracking_url: string | null;
+    has_tracking: boolean;
+    courier_partner: string | null;
 }
 
 interface GiftCard {
@@ -211,7 +214,14 @@ export default function MyOrdersPage() {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div className="w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-gray-50">
+                                                <div className="w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-gray-50 flex gap-2">
+                                                    {order.tracking_url && (
+                                                        <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
+                                                           className="flex items-center justify-center gap-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all border border-indigo-200">
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                                                            Track
+                                                        </a>
+                                                    )}
                                                     <Link href={`/orders/${order.uuid}`} className="flex items-center justify-center gap-2 bg-gray-50 text-gray-900 hover:bg-primary hover:text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all">
                                                         Details
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>

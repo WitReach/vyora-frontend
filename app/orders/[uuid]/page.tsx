@@ -44,6 +44,10 @@ interface Order {
     created_at: string;
     items: OrderItem[];
     shipping_address: Address;
+    tracking_url: string | null;
+    tracking_number: string | null;
+    courier_partner: string | null;
+    has_tracking: boolean;
 }
 
 export default function OrderDetailsPage({ params }: { params: Promise<{ uuid: string }> }) {
@@ -124,6 +128,35 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ uuid: s
                             </div>
                         </div>
                     </div>
+
+                    {/* Tracking Banner */}
+                    {(order.status === 'shipped' || order.status === 'delivered') && (
+                        <div className="mx-8 md:mx-12 mt-6 bg-indigo-50 border border-indigo-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-indigo-900 text-sm">Your order is on the way!</p>
+                                    <p className="text-xs text-indigo-600 mt-0.5">
+                                        {order.courier_partner && <span>{order.courier_partner}</span>}
+                                        {order.courier_partner && order.tracking_number && <span className="mx-1">·</span>}
+                                        {order.tracking_number && <span className="font-mono">{order.tracking_number}</span>}
+                                        {!order.courier_partner && !order.tracking_number && <span>Tracking details will appear here</span>}
+                                    </p>
+                                </div>
+                            </div>
+                            {order.tracking_url ? (
+                                <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
+                                   className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-indigo-700 transition-colors shrink-0">
+                                    Track Package
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                </a>
+                            ) : (
+                                <span className="text-xs text-indigo-400 font-medium italic">Tracking link coming soon</span>
+                            )}
+                        </div>
+                    )}
 
                     <div className="p-8 md:p-12 grid md:grid-cols-3 gap-12">
                         {/* Items Column */}
