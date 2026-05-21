@@ -12,7 +12,9 @@ async function getData() {
     ]);
 
     if (!pageRes.ok) {
-      console.error("Failed to fetch home page", pageRes.status, pageRes.statusText);
+      if (pageRes.status !== 503) {
+        console.error("Failed to fetch home page", pageRes.status, pageRes.statusText);
+      }
       return { page: null, settings: {} };
     }
 

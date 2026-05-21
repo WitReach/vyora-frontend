@@ -12,6 +12,10 @@ export interface CartItem {
     image: string;
     quantity: number;
     tax_class?: string;
+    colorName?: string;
+    colorHex?: string;
+    sizeName?: string;
+    size?: string;
 }
 
 interface CartState {

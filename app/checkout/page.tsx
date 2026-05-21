@@ -24,11 +24,12 @@ export default function CheckoutPage() {
 
     // Re-validate coupon on mount to prevent stale localStorage data
     useEffect(() => {
-        if (mounted && cart.appliedCoupon && cart.items.length > 0) {
+        const currentCoupon = cart.appliedCoupon;
+        if (mounted && currentCoupon && cart.items.length > 0) {
             const revalidate = async () => {
                 try {
                     const res = await api.post('/api/coupon/apply', {
-                        code: cart.appliedCoupon.code,
+                        code: currentCoupon.code,
                         cart: {
                             subtotal: cart.items.reduce((s, i) => s + (Number(i.price) * i.quantity), 0),
                             items: cart.items.map(i => ({
@@ -41,9 +42,9 @@ export default function CheckoutPage() {
                     });
                     if (res.data.success) {
                         // Update if amount changed in backend
-                        if (res.data.data.discount_amount !== cart.appliedCoupon.discountAmount) {
+                        if (res.data.data.discount_amount !== currentCoupon.discountAmount) {
                             cart.setAppliedCoupon({
-                                code: cart.appliedCoupon.code,
+                                code: currentCoupon.code,
                                 discountAmount: res.data.data.discount_amount
                             });
                         }

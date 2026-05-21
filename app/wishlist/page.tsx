@@ -37,6 +37,7 @@ interface ProductFull {
     images: ProductImage[];
     coupon_price?: number;
     tax_class?: string;
+    mrp?: number | string;
 }
 
 // ── Horizontal scrollable row with arrow buttons + mouse wheel ───────────────

@@ -20,18 +20,38 @@ export const metadata: Metadata = {
 import Installer from "@/components/Installer";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/auth/AuthModal";
+import Maintenance from "@/components/Maintenance";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 
 async function getSettings() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+  const apiUrl = process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api` : 'http://127.0.0.1:8000/api';
   try {
-    // using no-store to always dynamically fetch the latest backend config changes
     const res = await fetch(`${apiUrl}/settings`, { cache: 'no-store' });
     if (res.ok) return res.json();
   } catch (error) {
     console.warn("Failed to fetch settings from API backend.");
   }
   return {};
+}
+
+async function checkMaintenanceStatus() {
+  const apiUrl = process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api` : 'http://127.0.0.1:8000/api';
+  try {
+    const res = await fetch(`${apiUrl}/maintenance-status`, { 
+      cache: 'no-store',
+      signal: AbortSignal.timeout(3000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return !!data.maintenance;
+    }
+    // If the backend returns a 503 (Maintenance) or 500 (Outage/Down), trigger maintenance screen.
+    return true;
+  } catch (error) {
+    console.warn("Failed to check maintenance status from API backend.");
+    // If fetch fails completely (offline backend), safely lock down the site.
+    return true;
+  }
 }
 
 import Script from "next/script";
@@ -41,17 +61,25 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isConfigured = !!process.env.NEXT_PUBLIC_API_URL;
-  const settings = await getSettings();
+  const isConfigured = !!process.env.BACKEND_URL;
+  
+  let maintenanceStatus = false;
+  let settings: any = {};
+  
+  if (isConfigured) {
+    maintenanceStatus = await checkMaintenanceStatus();
+    // Always load settings so the maintenance page can dynamically display the brand logo and colors
+    settings = await getSettings();
+  }
 
   const primary = settings.primary_color || '#000000';
   const secondary = settings.secondary_color || '#ffffff';
   const accent = settings.accent_color || '#3b82f6';
-  
+
   const headingFont = settings.heading_font || 'Inter';
   const bodyFont = settings.body_font || 'Inter';
 
-  // Build a deduplicated Google Fonts URL (avoid loading same font twice)
+  // Build a deduplicated Google Fonts URL
   const fontFamilies = [...new Set([headingFont, bodyFont])]
     .map(f => `family=${f.replace(/ /g, '+')}:wght@400;500;600;700;800`)
     .join('&');
@@ -78,13 +106,15 @@ export default async function RootLayout({
         } as React.CSSProperties}
       >
         {isConfigured ? (
-          <>
+          maintenanceStatus ? (
+            <Maintenance settings={settings} />
+          ) : (
             <SettingsProvider settings={settings}>
               <Navbar settings={settings} />
               {children}
               <AuthModal />
             </SettingsProvider>
-          </>
+          )
         ) : <Installer />}
       </body>
     </html>

@@ -11,7 +11,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'URL required' }, { status: 400 });
         }
 
-        const envContent = `NEXT_PUBLIC_API_URL="${apiUrl}"\n`;
+        const backendUrl = apiUrl.replace(/\/$/, "").replace(/\/api$/, "");
+        const envContent = `BACKEND_URL="${backendUrl}"\n`;
         const envPath = path.join(process.cwd(), '.env.local');
 
         fs.writeFileSync(envPath, envContent, { flag: 'w' });

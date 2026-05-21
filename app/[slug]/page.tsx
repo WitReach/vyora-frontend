@@ -12,25 +12,86 @@ async function getData(slug: string) {
       fetch(`${apiUrl}/settings`, { cache: 'no-store' })
     ]);
 
-    if (!pageRes.ok) {
-      if (pageRes.status === 404) return { page: null, settings: {} };
-      console.error("Failed to fetch CMS page", pageRes.status, pageRes.statusText);
-      return { page: null, settings: {} };
+    let page = null;
+    let shortlink = null;
+
+    if (pageRes.ok) {
+      page = await pageRes.json();
+    } else if (pageRes.status === 404) {
+      // Fallback: check if slug is a shortlink
+      const shortlinkRes = await fetch(`${apiUrl}/shortlinks/${slug}`, { cache: 'no-store' });
+      if (shortlinkRes.ok) {
+        shortlink = await shortlinkRes.json();
+      }
     }
 
-    const page = await pageRes.json();
     const settings = settingsRes.ok ? await settingsRes.json() : {};
 
-    return { page, settings };
+    return { page, settings, shortlink };
   } catch (error) {
-    console.error("Error fetching CMS data", error);
-    return { page: null, settings: {} };
+    console.error("Error fetching CMS or shortlink data", error);
+    return { page: null, settings: {}, shortlink: null };
   }
+}
+
+import { Metadata, ResolvingMetadata } from "next";
+
+export async function generateMetadata({ params }: { params: { slug: string } }, parent: ResolvingMetadata): Promise<Metadata> {
+  const { slug } = params;
+  const { page, shortlink } = await getData(slug);
+
+  if (shortlink) {
+    const { url, meta } = shortlink;
+    if (meta) {
+      return {
+        title: meta.title,
+        description: meta.description,
+        openGraph: {
+          title: meta.title,
+          description: meta.description,
+          images: meta.image ? [meta.image] : [],
+          url: url,
+        },
+        alternates: {
+          canonical: url,
+        }
+      };
+    }
+    return { alternates: { canonical: url } };
+  }
+
+  if (page) {
+    // Generate page metadata here if applicable
+    return {
+      title: page.title || 'Page',
+    };
+  }
+
+  return {};
 }
 
 export default async function CMSPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
-  const { page, settings } = await getData(slug);
+  const { page, settings, shortlink } = await getData(slug);
+
+  if (shortlink) {
+    return (
+      <>
+        <meta httpEquiv="refresh" content={`0; url=${shortlink.url}`} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+            <p className="text-gray-500 font-medium">Redirecting you to the destination...</p>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.location.replace("${shortlink.url}");`
+              }}
+            />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   if (!page || !page.content) {
     notFound();

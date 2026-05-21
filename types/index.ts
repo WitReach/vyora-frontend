@@ -29,6 +29,7 @@ export interface ProductDetail extends ProductList {
         description: string;
         measurements: any[];
     } | null;
+    tax_class?: string;
 }
 
 export interface Variant {

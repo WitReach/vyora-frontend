@@ -93,7 +93,7 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
             if (s) all.add(s.value);
         });
 
-        const availableInChart = product.size_chart?.measurements?.rows?.map((r: any) => r.size_code.toUpperCase()) || null;
+        const availableInChart = (product.size_chart?.measurements as any)?.rows?.map((r: any) => r.size_code.toUpperCase()) || null;
 
         // Simplistic order mapping: XS, S, M, L, XL, XXL
         const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'];
@@ -154,7 +154,7 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
     }, [selectedColor, colors, uniqueImages, displayedImages]);
 
     const sizeChartRows = useMemo(() => {
-        const rows = product.size_chart?.measurements?.rows || [];
+        const rows = (product.size_chart?.measurements as any)?.rows || [];
         const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL', '5XL'];
 
         return [...rows].sort((a: any, b: any) => {
@@ -165,7 +165,7 @@ export default function ProductDetailClient({ product, policies = {}, coupons = 
     }, [product.size_chart]);
 
     const sizeChartHeaders = useMemo(() => {
-        return product.size_chart?.measurements?.headers || [];
+        return (product.size_chart?.measurements as any)?.headers || [];
     }, [product.size_chart]);
 
     const currentVariant = useMemo(() => {

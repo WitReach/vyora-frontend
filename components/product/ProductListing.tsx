@@ -108,7 +108,7 @@ function ProductListingInner({ title, initialFilters, baseEndpoint = '/api/produ
             const fetched = res.data.data;
             
             if (fetched && fetched.length === 0 && !append) {
-                 setProducts([{ id: 9998, name: 'PAYLOAD: ' + JSON.stringify(res.data).substring(0, 100), price: 0, price_formatted: "$0", mrp: 0, image: "https://via.placeholder.com/150", hover_image: "", discount_percentage: 0, is_new: false, category: "Error" }]);
+                 setProducts([{ id: 9998, name: 'PAYLOAD: ' + JSON.stringify(res.data).substring(0, 100), price: 0, price_formatted: "$0", mrp: 0, image: "https://via.placeholder.com/150", hover_image: "", discount_percentage: 0, is_new: false, category: "Error", slug: 'error', brand: null }]);
                  setHasMore(false);
                  return;
             }
@@ -122,7 +122,7 @@ function ProductListingInner({ title, initialFilters, baseEndpoint = '/api/produ
             setHasMore(res.data.meta.current_page < res.data.meta.last_page);
         } catch (error: any) {
             console.error('Failed to fetch products from ' + currentUrl, error);
-            setProducts([{ id: 9999, name: 'ERR: ' + (error.message || String(error)), price: 0, price_formatted: "$0", mrp: 0, image: "https://via.placeholder.com/150", hover_image: "", discount_percentage: 0, is_new: false, category: "Error" }]);
+            setProducts([{ id: 9999, name: 'ERR: ' + (error.message || String(error)), price: 0, price_formatted: "$0", mrp: 0, image: "https://via.placeholder.com/150", hover_image: "", discount_percentage: 0, is_new: false, category: "Error", slug: 'error', brand: null }]);
         } finally {
             setLoading(false);
             setLoadingMore(false);

@@ -6,6 +6,7 @@ interface User {
     id: number;
     name: string;
     email: string;
+    phone?: string;
 }
 
 interface AuthState {
@@ -52,3 +53,14 @@ api.interceptors.request.use((config) => {
     }
     return config;
 });
+
+// Interceptor to gracefully handle expired tokens
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            useAuthStore.getState().logout();
+        }
+        return Promise.reject(error);
+    }
+);
